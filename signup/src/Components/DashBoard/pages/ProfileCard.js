@@ -1,5 +1,5 @@
 import React from "react";
-import "../styles/ProfileCard.css";
+import "./ProfileCard.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 const ProfileCard = () => {

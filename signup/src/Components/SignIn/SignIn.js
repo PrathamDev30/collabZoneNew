@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { Link, useNavigate } from "react-router-dom";
 import "./SignIn.css";
 import DashBoard from "../DashBoard/DashBoard";
-import { Link } from "react-router-dom"; 
-import { useNavigate } from "react-router-dom";
+import ProfileCard from "../DashBoard/components/ProfileCard"; // Import ProfileCard
 
+// Validation schema using Yup
 const schema = yup.object().shape({
   email: yup.string().email("Invalid email").required("Email is required"),
   password: yup.string().min(6, "Password must be at least 6 characters").required("Password is required"),
@@ -16,17 +17,21 @@ const SignIn = ({ setUserData }) => {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [userData, setUser] = useState(null); // Local state to store user details
   const navigate = useNavigate();
 
+  // React Hook Form
   const {
     register,
     handleSubmit,
     formState: { errors },
   } = useForm({ resolver: yupResolver(schema) });
 
+  // Handle form submission
   const onSubmit = async (data) => {
     setLoading(true);
     setErrorMessage("");
+
     try {
       const response = await fetch("https://localhost:44312/api/auth/signin", {
         method: "POST",
@@ -37,7 +42,8 @@ const SignIn = ({ setUserData }) => {
       const result = await response.json();
       if (response.ok) {
         alert("Login Successful");
-        setUserData(result.user);
+        setUser(result.user);
+        setUserData(result.user); // Update user data in parent state
         setIsAuthenticated(true);
       } else {
         setErrorMessage(result.message || "Invalid credentials");
@@ -45,17 +51,32 @@ const SignIn = ({ setUserData }) => {
     } catch (error) {
       setErrorMessage("An error occurred. Please try again.");
     }
+
     setLoading(false);
   };
 
+  // Logout handler
+  const handleLogout = () => {
+    setUser(null);
+    setUserData(null);
+    setIsAuthenticated(false);
+    alert("Logout successful");
+  };
+
+  // If user is authenticated, show the Dashboard with ProfileCard
   if (isAuthenticated) {
-    return <DashBoard />;
+    return (
+      <>
+        <DashBoard />
+        <ProfileCard userData={userData} onClose={handleLogout} />
+      </>
+    );
   }
 
   return (
     <div className="signin-container">
       <div className="signin-box">
-      <h1>
+        <h1>
           <span className="c">C</span>
           <span className="o">o</span>
           <span className="l">l</span>
@@ -89,11 +110,21 @@ const SignIn = ({ setUserData }) => {
         </form>
 
         <p className="signup-text">
-          Don't have an account? <a href="/signup" onClick={(e) => { e.preventDefault(); navigate("/signup"); }}>Sign up</a>
+          Don't have an account?{" "}
+          <a
+            href="/signup"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/signup");
+            }}
+          >
+            Sign up
+          </a>
         </p>
+
         <p className="forgot-password-text">
-  <Link to="/forgot-password">Forgot Password?</Link>
-</p>
+          <Link to="/forgot-password">Forgot Password?</Link>
+        </p>
       </div>
     </div>
   );
